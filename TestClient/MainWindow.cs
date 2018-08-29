@@ -18,6 +18,7 @@
 
 //lemme upload, git T_T
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -41,6 +42,10 @@ namespace TestClient
         public MainWindow()
         {
             InitializeComponent();
+
+            ReadConfig();
+            FormClosed += MainWindow_FormClosed;
+
             _obs = new OBSWebsocket();
 
             _obs.Connected += onConnect;
@@ -68,6 +73,44 @@ namespace TestClient
 
             FillOverlayKeysList();
             comboBoxOverlayKeys.SelectedIndexChanged += ComboBoxOverlayKeys_SelectedIndexChanged;
+            comboBoxOverlayKeys.KeyDown += ComboBoxOverlayKeys_KeyDown;
+            txtServerPassword.KeyDown += TxtServerPassword_KeyDown;
+        }
+
+        private void TxtServerPassword_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                e.Handled = e.SuppressKeyPress = true;
+                btnConnect.PerformClick();
+            }
+        }
+
+        private void ReadConfig()
+        {
+            if (File.Exists("config.ini"))
+            {
+                string config = File.ReadAllText("config.ini");
+                overlayKey = config.Split('\n')[0].Replace("\r", "");
+                comboBoxOverlayKeys.Text = overlayKey;
+                overlayImage = config.Split('\n')[1].Replace("\r", "");
+                labelOverlayName.Text = overlayImage;
+            }
+        }
+
+        private void SaveConfig()
+        {
+            File.WriteAllLines("config.ini", new string[2]{overlayKey, overlayImage});
+        }
+
+        private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            SaveConfig();
+        }
+
+        private void ComboBoxOverlayKeys_KeyDown(object sender, KeyEventArgs e)
+        {
+            e.Handled = e.SuppressKeyPress = true;
         }
 
         private void ComboBoxOverlayKeys_SelectedIndexChanged(object sender, EventArgs e)
